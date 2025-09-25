@@ -1,5 +1,8 @@
-import lzma
 import os
+import lzma
+from tqdm import tqdm
+import concurrent.futures
+import random
 
 def process_file(args):
     directory, filename, output_file, vocab = args
