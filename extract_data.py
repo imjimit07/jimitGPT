@@ -10,3 +10,14 @@ def process_file(args):
         outfile.write(text)
     characters = set(text)
     return characters
+
+def xz_files_in_dir(directory):
+    return [filename for filename in os.listdir(directory) if filename.endswith(".xz") and os.path.isfile(os.path.join(directory, filename))]
+
+def process_files_in_parallel(files, folder_path, output_file):
+    vocab = set()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        args = [(folder_path, filename, output_file, vocab) for filename in files]
+        for characters in tqdm(executor.map(process_file, args), total=len(files)):
+            vocab.update(characters)
+    return vocab
