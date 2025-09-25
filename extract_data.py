@@ -21,3 +21,36 @@ def process_files_in_parallel(files, folder_path, output_file):
         for characters in tqdm(executor.map(process_file, args), total=len(files)):
             vocab.update(characters)
     return vocab
+
+folder_path = "openwebtext"
+output_file_train = "output_train.txt"
+output_file_val = "output_val.txt"
+vocab_file = "vocab.txt"
+
+files = xz_files_in_dir(folder_path)
+total_files = len(files)
+
+split_index = int(total_files * 0.9)  # 90% for training
+files_train = files[:split_index]
+files_val = files[split_index:]
+
+# Sampling a half of the files for each split
+sample_rate = 0.5 # 50% of 40GB of text
+files_train_sampled = random.sample(files_train, max(1, int(len(files_train) * sample_rate)))
+files_val_sampled = random.sample(files_val, max(1, int(len(files_val) * sample_rate)))
+
+# output files are empty before appending
+open(output_file_train, 'w').close()
+open(output_file_val, 'w').close()
+
+# sampled training files
+vocab_train = process_files_in_parallel(files_train_sampled, folder_path, output_file_train)
+
+# sampled validation files
+vocab_val = process_files_in_parallel(files_val_sampled, folder_path, output_file_val)
+
+# Combine vocab
+vocab = vocab_train.union(vocab_val)
+with open(vocab_file, "w", encoding="utf-8") as vfile:
+    for char in sorted(vocab):
+        vfile.write(char + '\n')
